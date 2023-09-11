@@ -1,0 +1,21 @@
+FROM alpine/git:latest
+
+ARG BACKEND_REPO
+
+RUN git clone $BACKEND_REPO /app
+
+FROM python:3.10-slim-bullseye
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED True
+
+EXPOSE 8000
+
+COPY .env /app/.env
+
+COPY --from=0 /app /app
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["python", "main.py"]

@@ -1,0 +1,42 @@
+# Define nossa imagem base
+FROM jenkins/jenkins:lts-jdk11
+
+# Define as variáveis de ambiente
+ENV EMAIL_USER=""
+ENV EMAIL_PASS=""
+
+# Define nosso usuario dentro do container
+USER root
+
+# Instalação do Node.js
+RUN apt-get update && apt-get install -y curl && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs
+
+# Instalação do Yarn
+RUN npm install -g yarn
+
+# sendmail config
+RUN apt-get install -q -y ssmtp mailutils
+
+# Here is the gmail configuration (or change it to your private smtp server)
+RUN echo "mailhub=smtp.gmail.com:587" >> /etc/ssmtp/ssmtp.conf
+
+RUN echo "UseTLS=YES" >> /etc/ssmtp/ssmtp.conf
+RUN echo "UseSTARTTLS=YES" >> /etc/ssmtp/ssmtp.conf
+
+# Criar mail.txt
+RUN echo "To:Italo\nFrom:Docker Container\nSubject: Teste de envio de email\nTeste de envio de email" >> /var/mail.txt
+
+# Script para configuração de enviar email
+COPY scripts/email.sh /usr/local/bin/email.sh
+RUN chmod +x /usr/local/bin/email.sh
+RUN chown -R jenkins:jenkins /etc/ssmtp
+
+# Executa o script e inicializa o Jenkins
+CMD ["/usr/local/bin/email.sh", "/usr/local/bin/jenkins.sh"]
+
+# Limpa arquivos baixados com apt-get
+RUN apt-get clean
+
+USER jenkins

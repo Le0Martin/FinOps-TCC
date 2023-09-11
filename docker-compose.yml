@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    ports:
+      - 50000:8080
+    env_file:
+      - .env
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        - BACKEND_REPO=${BACKEND_REPO}
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+
+  react_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - api
